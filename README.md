@@ -45,6 +45,9 @@ Requires [bun](https://bun.sh) (upstream pins 1.3.x). Not installed on this mach
 | 02-config-files | Global config filenames → `fyluncode.json(c)`; tui-migrate disabled | Global config is ours; migration code *writes to* (strips keys from) any `opencode.json` found up the tree — must never touch a stock user's files. |
 | 03-binary-name | Build outfile + yargs scriptName → `fylun-code` | Binary/help-text identity. |
 | 04-update-channel | `latest` reports installed version; `upgrade` errors with Fylun installer hint | Upstream's upgrade paths install `opencode-ai` from npm/brew/GitHub — would replace this binary with stock opencode. TODO(fylun): point at the Fylun release API when live. |
+| 05-branding | ASCII logo + wordmark say "fylun code" | Identity in the TUI banner / help logo. |
+| 06-pinned-catalog | Baked models.dev snapshot is authoritative (no disk-cache preference, no runtime fetch/refresh); model dialog drops the "Recent" section and the "Connect provider" action | The catalog feeds the provider/`/login` list and the model picker. `build.sh` bakes a Fylun-only catalog (`distribution/models-fylun.json`) via `MODELS_DEV_API_JSON` so only Fylun appears — never anomalyco's providers. Don't bake an empty `{}` catalog: that also removes Fylun from the connect/`/login` list. |
+| 07-login-flow | `AutoMethod` exported; `/login` is a dedicated command that goes straight to Fylun browser OAuth (skips the provider list + auth-method menu), falling back to the full dialog if unavailable. `/connect` keeps the full menu | Fast Claude-Code-style login. The plugin auto-opens the browser (no link click). The API-key method still lives in `/connect` and Settings → Security. |
 
 ### Deliberate non-changes
 

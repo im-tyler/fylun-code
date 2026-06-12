@@ -1,7 +1,29 @@
 import http from "node:http"
 import crypto from "node:crypto"
+import { spawn } from "node:child_process"
 import type { AddressInfo } from "node:net"
 import type { Plugin } from "@opencode-ai/plugin"
+
+/**
+ * Open a URL in the user's default browser, cross-platform. Detached and
+ * best-effort: opencode still renders the URL as a clickable link, so if the
+ * launch fails (headless box, no browser) the user can open it manually.
+ */
+function openBrowser(url: string): void {
+  try {
+    const [cmd, args] =
+      process.platform === "darwin"
+        ? ["open", [url]]
+        : process.platform === "win32"
+          ? ["cmd", ["/c", "start", "", url]]
+          : ["xdg-open", [url]]
+    const child = spawn(cmd as string, args as string[], { stdio: "ignore", detached: true })
+    child.on("error", () => {})
+    child.unref()
+  } catch {
+    // ignored — the clickable link in the TUI is the fallback
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Endpoints. None of these exist on fylun-web yet — they are the contract the
@@ -163,9 +185,13 @@ export const FylunAuthPlugin: Plugin = async ({ client }) => {
             url.searchParams.set("state", state)
             url.searchParams.set("scope", "chat models usage")
 
+            // Launch the browser automatically — the loopback is already
+            // listening, so no click on the rendered link is needed.
+            openBrowser(url.toString())
+
             return {
               url: url.toString(),
-              instructions: "Finish logging in to Fylun in your browser.",
+              instructions: "Opening your browser to finish logging in to Fylun…",
               method: "auto",
               callback: async () => {
                 const code = await callback.code

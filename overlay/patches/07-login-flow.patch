@@ -1,0 +1,62 @@
+diff --git a/packages/tui/src/app.tsx b/packages/tui/src/app.tsx
+index edf9085..64ebbc8 100644
+--- a/packages/tui/src/app.tsx
++++ b/packages/tui/src/app.tsx
+@@ -25,7 +25,7 @@ import {
+ } from "solid-js"
+ import { TuiPathsProvider, TuiStartupProvider, TuiTerminalEnvironmentProvider, useTuiStartup } from "./context/runtime"
+ import { DialogProvider, useDialog } from "./ui/dialog"
+-import { DialogProvider as DialogProviderList } from "./component/dialog-provider"
++import { DialogProvider as DialogProviderList, AutoMethod } from "./component/dialog-provider"
+ import { ErrorComponent } from "./component/error-component"
+ import { PluginRouteMissing } from "./component/plugin-route-missing"
+ import { ProjectProvider, useProject } from "./context/project"
+@@ -730,6 +730,35 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
+         },
+         category: "Provider",
+       },
++      {
++        // Fylun Code fast path: /login goes straight to Fylun browser OAuth
++        // (the plugin auto-opens the browser), skipping the provider list and
++        // the auth-method menu. Falls back to the full /connect dialog if the
++        // browser method isn't available (e.g. before sync completes). The
++        // API-key method still lives in /connect and Settings → Security.
++        name: "provider.login",
++        title: "Log in to Fylun",
++        suggested: !connected(),
++        slashName: "login",
++        run: async () => {
++          const providerID = "fylun"
++          const methods = sync.data.provider_auth[providerID] ?? []
++          const index = methods.findIndex((m) => m.type === "oauth")
++          if (index < 0) {
++            dialog.replace(() => <DialogProviderList />)
++            return
++          }
++          const result = await sdk.client.provider.oauth.authorize({ providerID, method: index })
++          if (result.error || result.data?.method !== "auto") {
++            dialog.replace(() => <DialogProviderList />)
++            return
++          }
++          dialog.replace(() => (
++            <AutoMethod providerID={providerID} title="Log in to Fylun" index={index} authorization={result.data!} />
++          ))
++        },
++        category: "Provider",
++      },
+       ...(sync.data.console_state.switchableOrgCount > 1
+         ? [
+             {
+diff --git a/packages/tui/src/component/dialog-provider.tsx b/packages/tui/src/component/dialog-provider.tsx
+index 2767508..6bb384d 100644
+--- a/packages/tui/src/component/dialog-provider.tsx
++++ b/packages/tui/src/component/dialog-provider.tsx
+@@ -236,7 +236,7 @@ interface AutoMethodProps {
+   title: string
+   authorization: ProviderAuthAuthorization
+ }
+-function AutoMethod(props: AutoMethodProps) {
++export function AutoMethod(props: AutoMethodProps) {
+   const { theme } = useTheme()
+   const sdk = useSDK()
+   const dialog = useDialog()

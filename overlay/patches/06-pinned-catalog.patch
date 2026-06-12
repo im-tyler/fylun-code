@@ -34,19 +34,6 @@ index 3f9f670..32413f5 100644
        yield* Effect.forkScoped(refresh().pipe(Effect.repeat(Schedule.spaced("60 minutes")), Effect.ignore))
      }
  
-diff --git a/packages/tui/src/app.tsx b/packages/tui/src/app.tsx
-index edf9085..26d1fcd 100644
---- a/packages/tui/src/app.tsx
-+++ b/packages/tui/src/app.tsx
-@@ -725,6 +725,8 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
-         title: "Connect provider",
-         suggested: !connected(),
-         slashName: "connect",
-+        // Fylun Code: most users reach for /login (Claude Code-style).
-+        slashAliases: ["login"],
-         run: () => {
-           dialog.replace(() => <DialogProviderList />)
-         },
 diff --git a/packages/tui/src/component/dialog-model.tsx b/packages/tui/src/component/dialog-model.tsx
 index 15da1a6..29b3a11 100644
 --- a/packages/tui/src/component/dialog-model.tsx
