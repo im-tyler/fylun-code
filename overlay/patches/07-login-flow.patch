@@ -1,5 +1,5 @@
 diff --git a/packages/tui/src/app.tsx b/packages/tui/src/app.tsx
-index edf9085..7877242 100644
+index edf9085..168bd4b 100644
 --- a/packages/tui/src/app.tsx
 +++ b/packages/tui/src/app.tsx
 @@ -25,7 +25,7 @@ import {
@@ -11,7 +11,7 @@ index edf9085..7877242 100644
  import { ErrorComponent } from "./component/error-component"
  import { PluginRouteMissing } from "./component/plugin-route-missing"
  import { ProjectProvider, useProject } from "./context/project"
-@@ -696,10 +696,14 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
+@@ -696,10 +696,16 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
        },
        {
          name: "variant.list",
@@ -21,14 +21,16 @@ index edf9085..7877242 100644
          hidden: local.model.variant.list().length === 0,
 -        slashName: "variants",
 +        // Fylun Code: model "variants" are reasoning-effort levels here, so
-+        // /effort is the primary command; keep /variants (opencode term) and
-+        // /thinking searchable as aliases.
++        // /effort is the primary command; /variants (opencode term) stays as
++        // an alias. NOTE: do NOT alias /thinking here — opencode already has a
++        // built-in /thinking ("Expand/Collapse thinking") that toggles
++        // reasoning-text visibility; aliasing it would collide.
 +        slashName: "effort",
-+        slashAliases: ["variants", "thinking"],
++        slashAliases: ["variants"],
          run: () => {
            if (local.model.variant.list().length === 0) {
              return toast.show({
-@@ -730,6 +734,35 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
+@@ -730,6 +736,35 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
          },
          category: "Provider",
        },

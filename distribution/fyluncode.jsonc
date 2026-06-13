@@ -20,7 +20,7 @@
   // No "plugin" entry: the Fylun auth provider is compiled into the binary
   // (opencode internalPlugins), not loaded from npm or a file.
 
-  "model": "fylun/claude-sonnet-4-6",
+  "model": "fylun/deepseek-v4-flash",
 
   "provider": {
     "fylun": {
