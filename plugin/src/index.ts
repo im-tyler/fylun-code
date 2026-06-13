@@ -266,9 +266,9 @@ export const FylunAuthPlugin: Plugin = async ({ client }) => {
   }
 }
 
-// opencode's plugin loader reads `module.default` and requires an object with
-// a `server()` function (the v1 PluginModule shape `{ id?, server, tui? }`) —
-// a bare default-exported function is rejected as "must default export an
-// object with server()". Export both: the object for opencode, and the named
-// function for anyone importing it directly.
-export default { id: "opencode-fylun-auth", server: FylunAuthPlugin }
+// This plugin is compiled into the fylun-code binary via opencode's
+// `internalPlugins` registry (it imports the named `FylunAuthPlugin`). The
+// default export is the v1 PluginModule shape `{ id, server }` so the same
+// file also works if ever loaded as a file/npm plugin — opencode's loader
+// requires an object with `server()`, not a bare function.
+export default { id: "fylun-auth", server: FylunAuthPlugin }

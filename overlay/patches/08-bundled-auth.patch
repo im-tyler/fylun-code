@@ -1,0 +1,24 @@
+diff --git a/packages/opencode/src/plugin/index.ts b/packages/opencode/src/plugin/index.ts
+index 4c4659d..7bf5279 100644
+--- a/packages/opencode/src/plugin/index.ts
++++ b/packages/opencode/src/plugin/index.ts
+@@ -19,6 +19,10 @@ import { CloudflareAIGatewayAuthPlugin, CloudflareWorkersAuthPlugin } from "./cl
+ import { AzureAuthPlugin } from "./azure"
+ import { DigitalOceanAuthPlugin } from "./digitalocean"
+ import { XaiAuthPlugin } from "./xai"
++// Fylun Code: the Fylun auth provider is compiled into the binary (like the
++// providers above), not installed from npm. Source of truth is
++// fylun-code/plugin/src/index.ts; build.sh copies it to ./fylun-auth.ts.
++import { FylunAuthPlugin } from "./fylun-auth"
+ import { Effect, Layer, Context } from "effect"
+ import { EffectBridge } from "@/effect/bridge"
+ import { InstanceState } from "@/effect/instance-state"
+@@ -63,6 +67,8 @@ export function experimentalWebSocketsEnabled(input: { enabled: boolean; channel
+ // Built-in plugins that are directly imported (not installed from npm)
+ function internalPlugins(flags: RuntimeFlags.Info): PluginInstance[] {
+   return [
++    // Fylun is the lone provider for this distribution — listed first.
++    FylunAuthPlugin,
+     // Temporary rollout: pre-release builds use WebSockets by default; releases require explicit opt-in.
+     (input) =>
+       CodexAuthPlugin(input, {

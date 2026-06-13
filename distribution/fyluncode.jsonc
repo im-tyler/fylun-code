@@ -17,7 +17,8 @@
   // a competitor's subsidy. MIT covers their code, not their hosted services.
   "disabled_providers": ["opencode"],
 
-  "plugin": ["opencode-fylun-auth"],
+  // No "plugin" entry: the Fylun auth provider is compiled into the binary
+  // (opencode internalPlugins), not loaded from npm or a file.
 
   "model": "fylun/claude-sonnet-4-6",
 

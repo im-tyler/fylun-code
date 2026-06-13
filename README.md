@@ -14,7 +14,7 @@ fylun-code/
 ├── UPSTREAM_VERSION        # pinned upstream release tag (v1.17.3)
 ├── upstream/               # gitignored; shallow clone managed by scripts
 ├── overlay/patches/        # the entire diff between opencode and fylun-code
-├── plugin/                 # opencode-fylun-auth (npm package, works in stock opencode)
+├── plugin/                 # Fylun auth provider — compiled into the binary (patch 08)
 ├── distribution/           # baked default global config shipped by the installer
 └── scripts/                # fetch-upstream.sh, apply-overlay.sh, build.sh
 ```
@@ -47,7 +47,8 @@ Requires [bun](https://bun.sh) (upstream pins 1.3.x). Not installed on this mach
 | 04-update-channel | `latest` reports installed version; `upgrade` errors with Fylun installer hint | Upstream's upgrade paths install `opencode-ai` from npm/brew/GitHub — would replace this binary with stock opencode. TODO(fylun): point at the Fylun release API when live. |
 | 05-branding | ASCII logo + wordmark say "fylun code" | Identity in the TUI banner / help logo. |
 | 06-pinned-catalog | Baked models.dev snapshot is authoritative (no disk-cache preference, no runtime fetch/refresh); model dialog drops the "Recent" section and the "Connect provider" action | The catalog feeds the provider/`/login` list and the model picker. `build.sh` bakes a Fylun-only catalog (`distribution/models-fylun.json`) via `MODELS_DEV_API_JSON` so only Fylun appears — never anomalyco's providers. Don't bake an empty `{}` catalog: that also removes Fylun from the connect/`/login` list. |
-| 07-login-flow | `AutoMethod` exported; `/login` is a dedicated command that goes straight to Fylun browser OAuth (skips the provider list + auth-method menu), falling back to the full dialog if unavailable. `/connect` keeps the full menu | Fast Claude-Code-style login. The plugin auto-opens the browser (no link click). The API-key method still lives in `/connect` and Settings → Security. |
+| 07-login-flow | `AutoMethod` exported; `/login` is a dedicated command that goes straight to Fylun browser OAuth (skips the provider list + auth-method menu), falling back to the full dialog if unavailable. `/connect` keeps the full menu. The "Other / custom provider" entry is removed so **Fylun is the lone provider** in the UI | Fast Claude-Code-style login + single-provider product. The plugin auto-opens the browser (no link click). API-key method still lives in `/connect` + Settings → Security; custom providers still work via config, just not advertised. |
+| 08-bundled-auth | Registers `FylunAuthPlugin` in opencode's `internalPlugins` so the auth provider is **compiled into the binary** (like opencode's own Copilot/xAI/GitLab auth), not installed from npm | No npm package, no `plugin` config entry, no runtime plugin-install. `build.sh` copies `plugin/src/index.ts` → `upstream/.../plugin/fylun-auth.ts` before building. Updates ship with the binary. |
 
 ### Deliberate non-changes
 
@@ -60,19 +61,26 @@ Requires [bun](https://bun.sh) (upstream pins 1.3.x). Not installed on this mach
 - **No hard provider lock.** Only Fylun is configured by default; a user editing config to
   add their own keys is fine. The lock is the product (one login, every model), not code.
 
-## Auth plugin (`plugin/`)
+## Auth plugin (`plugin/src/index.ts`)
 
-`opencode-fylun-auth` implements opencode's plugin `auth` hook for provider id `fylun`:
+The Fylun auth provider (provider id `fylun`). **Compiled into the binary** via
+opencode's `internalPlugins` (patch 08) — same mechanism as opencode's own
+Copilot/xAI/GitLab providers. Not an npm package, not a config `plugin` entry,
+no runtime install. `build.sh` copies this file into the opencode source tree
+before building (`upstream/.../plugin/fylun-auth.ts`); this is the source of truth.
 
 - **Browser OAuth** (Claude Code-style): PKCE + one-shot loopback server on
-  `127.0.0.1:<random>/callback`, opens `fylun.ai` authorize page, exchanges code for
-  access/refresh tokens, stored by opencode in its `auth.json` (0600).
+  `127.0.0.1:<random>/callback`, opens the `fylun.ai` authorize page, auto-launches
+  the browser, then 302s the browser to `fylun.ai/code/connected`. Tokens stored by
+  opencode in `auth.json` (0600). Single-flight refresh (coalesces concurrent
+  refreshes so the server's token rotation doesn't race).
 - **API key** fallback (`fyl_...`) for headless/CI.
 - **Loader**: points `@ai-sdk/openai-compatible` at the Fylun API and injects/refreshes
   the bearer token per-request, persisting rotated tokens via `client.auth.set`.
 
-Publish to npm as `opencode-fylun-auth` — stock opencode users get Fylun with one plugin
-install; Fylun Code preloads it via `distribution/fyluncode.jsonc`.
+The `default export { id, server }` shape means the same file *could* also be
+published to npm later (for stock-opencode users) without changes — but the
+binary doesn't depend on that.
 
 ## fylun-web integration (BUILT 2026-06-11)
 

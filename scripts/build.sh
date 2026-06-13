@@ -9,6 +9,12 @@ command -v bun >/dev/null 2>&1 || { echo "bun is required: curl -fsSL https://bu
 ./scripts/fetch-upstream.sh
 ./scripts/apply-overlay.sh
 
+# Vendor the Fylun auth plugin into the opencode source tree so it compiles
+# INTO the binary (registered in internalPlugins by patch 08 — same mechanism
+# opencode uses for its own Copilot/xAI/etc. providers). No npm package, no
+# runtime install. Source of truth is plugin/src/index.ts.
+cp plugin/src/index.ts upstream/packages/opencode/src/plugin/fylun-auth.ts
+
 (cd upstream && bun install)
 
 # Bake a FYLUN-ONLY models.dev catalog. Patch 06 makes the baked snapshot

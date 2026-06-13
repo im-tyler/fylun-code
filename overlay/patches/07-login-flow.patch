@@ -48,10 +48,38 @@ index edf9085..64ebbc8 100644
          ? [
              {
 diff --git a/packages/tui/src/component/dialog-provider.tsx b/packages/tui/src/component/dialog-provider.tsx
-index 2767508..6bb384d 100644
+index 2767508..7bc69da 100644
 --- a/packages/tui/src/component/dialog-provider.tsx
 +++ b/packages/tui/src/component/dialog-provider.tsx
-@@ -236,7 +236,7 @@ interface AutoMethodProps {
+@@ -58,22 +58,14 @@ export function providerOptions(list: { id: string; name: string }[]): ProviderO
+         title: provider.name,
+         value: provider.id,
+         providerID: provider.id,
+-        description: {
+-          opencode: "(Recommended)",
+-          anthropic: "(API key)",
+-          openai: "(ChatGPT Plus/Pro or API key)",
+-          "opencode-go": "Low cost subscription for everyone",
+-        }[provider.id],
++        // Fylun Code: Fylun is the lone provider — drop per-provider hint text.
++        description: undefined,
+         category: provider.id in PROVIDER_PRIORITY ? "Popular" : "Providers",
+       })),
+     ),
+-    {
+-      type: "custom",
+-      title: "Other",
+-      value: CUSTOM_PROVIDER_OPTION_VALUE,
+-      description: "Custom provider",
+-      category: "Providers",
+-    },
++    // Fylun Code: no "Other / custom provider" entry — Fylun is the only
++    // provider offered in the UI. (Power users can still add one by editing
++    // fyluncode.jsonc; we just don't advertise it.)
+   ]
+ }
+ 
+@@ -236,7 +228,7 @@ interface AutoMethodProps {
    title: string
    authorization: ProviderAuthAuthorization
  }
